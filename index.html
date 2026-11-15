@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Моя система дня</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234f6ef7'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#ffffff; --text:#17181a; --muted:#8b8e94; --line:#e8e8ea; --hover:#f5f5f6;
+  --accent:#4f6ef7; --accent-soft:rgba(79,110,247,.10);
+  --ok:#3aa671; --warn:#d98a2b; --danger:#d4574e;
+  --c-anchor:#8b8e94; --c-deep:var(--accent); --c-routine:#5a9aa8; --c-buffer:#c2913e; --c-rest:#6faa7d;
+  --r:8px; --tr:170ms;
+}
+html[data-theme="dark"]{
+  --bg:#121316; --text:#ebebee; --muted:#84868d; --line:#26272c; --hover:#1c1d21;
+  --accent-soft:rgba(120,140,255,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:Inter,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg); color:var(--text); font-size:15px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;outline:none;transition:border-color var(--tr)}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+input[type=color]{padding:2px;height:36px;width:48px}
+::placeholder{color:var(--muted)}
+a{color:var(--accent)}
+h1{font-size:24px;font-weight:600;letter-spacing:-.02em}
+h2{font-size:17px;font-weight:600;letter-spacing:-.01em}
+h3{font-size:14px;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.tiny{font-size:12px}
+hr{border:none;border-top:1px solid var(--line);margin:20px 0}
+
+/* layout */
+#app{display:flex;min-height:100vh}
+#sidebar{
+  width:216px;flex-shrink:0;border-right:1px solid var(--line);
+  padding:24px 12px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:2px;
+}
+#sidebar .brand{font-weight:600;padding:0 12px 18px;font-size:15px;letter-spacing:-.01em}
+.navbtn{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:9px 12px;border-radius:var(--r);color:var(--muted);
+  transition:background var(--tr),color var(--tr);font-size:14px;
+}
+.navbtn svg{width:17px;height:17px;flex-shrink:0}
+.navbtn:hover{background:var(--hover);color:var(--text)}
+.navbtn.active{color:var(--accent);background:var(--accent-soft)}
+#sidebar .spacer{flex:1}
+#main{flex:1;min-width:0;padding:32px clamp(16px,4vw,48px) 96px;max-width:1040px;margin:0 auto}
+#bottomnav{display:none}
+#topbar{display:none}
+@media(max-width:760px){
+  #sidebar{display:none}
+  #app{flex-direction:column}
+  #topbar{
+    display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30;
+    background:var(--bg);border-bottom:1px solid var(--line);padding:calc(8px + env(safe-area-inset-top)) 16px 8px;
+  }
+  #topbar .brand{font-weight:600;font-size:15px;letter-spacing:-.01em}
+  #topbar .iconbtn svg{width:20px;height:20px}
+  #main{padding:20px 16px 96px}
+  #bottomnav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:40;
+    background:var(--bg);border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  #bottomnav .navbtn{flex:1;flex-direction:column;gap:3px;padding:6px 2px;font-size:10px;align-items:center;border-radius:6px}
+  #bottomnav .navbtn svg{width:20px;height:20px}
+}
+
+/* generic */
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.wrap{flex-wrap:wrap}
+.stack{display:flex;flex-direction:column;gap:10px}
+.section{margin-top:32px}
+.pagehead{margin-bottom:8px}
+.btn{
+  border:1px solid var(--line);border-radius:var(--r);padding:8px 14px;font-size:14px;
+  transition:background var(--tr),border-color var(--tr),color var(--tr);white-space:nowrap;
+}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{opacity:.9}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.ghost{border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--text);background:var(--hover)}
+.btn.sm{padding:4px 10px;font-size:13px}
+.iconbtn{color:var(--muted);padding:4px;border-radius:6px;line-height:0;transition:color var(--tr),background var(--tr)}
+.iconbtn:hover{color:var(--text);background:var(--hover)}
+.pill{display:inline-block;padding:2px 9px;border:1px solid var(--line);border-radius:99px;font-size:12px;color:var(--muted)}
+.empty{
+  border:1px dashed var(--line);border-radius:var(--r);padding:28px 20px;text-align:center;color:var(--muted);font-size:14px;margin-top:12px;
+}
+.progressbar{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.progressbar>i{display:block;height:100%;background:var(--accent);transition:width var(--tr)}
+
+/* checkbox tasks */
+.task{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:none}
+.task .cb{
+  width:18px;height:18px;border:1.5px solid var(--muted);border-radius:5px;flex-shrink:0;margin-top:2px;
+  display:flex;align-items:center;justify-content:center;transition:all var(--tr);color:#fff;font-size:12px;
+}
+.task.done .cb{background:var(--accent);border-color:var(--accent)}
+.task .txt{flex:1;transition:color var(--tr)}
+.task.done .txt{color:var(--muted);text-decoration:line-through}
+.task.frog{padding:10px 12px;border:1px solid var(--accent);border-radius:var(--r);margin-bottom:10px;background:var(--accent-soft)}
+.task .del{opacity:0}
+.task:hover .del,.task .del:focus-visible{opacity:1}
+@media(hover:none){.task .del{opacity:1}}
+.slotadd{width:100%;text-align:left;color:var(--muted);padding:8px 0;font-size:14px;border-bottom:1px solid var(--line);transition:color var(--tr)}
+.slotadd:hover{color:var(--accent)}
+.slotadd:last-child{border-bottom:none}
+
+/* schedule grid */
+.sched-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);margin-top:16px}
+.sched{display:flex;min-width:720px;user-select:none}
+.sched .gutter{width:48px;flex-shrink:0;border-right:1px solid var(--line)}
+.sched .gutter .glabel{height:26px;font-size:10px;color:var(--muted);text-align:right;padding-right:6px;transform:translateY(-6px)}
+.sched .gutter .ghead{height:34px}
+.daycol{flex:1;min-width:92px;border-right:1px solid var(--line);position:relative}
+.daycol:last-child{border-right:none}
+.dayhead{height:34px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);gap:5px}
+.dayhead.today{color:var(--accent);font-weight:600}
+.slots{position:relative}
+.slot{height:26px;border-bottom:1px solid var(--line)}
+.slot:nth-child(odd){border-bottom-style:dashed}
+.slot.dragsel{background:var(--accent-soft)}
+.blk{
+  position:absolute;left:3px;right:3px;border-radius:6px;padding:3px 7px;font-size:11.5px;line-height:1.3;
+  overflow:hidden;cursor:pointer;border-left:3px solid;transition:opacity var(--tr);
+}
+.blk:hover{opacity:.85}
+.blk .bt{font-weight:600;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.blk.now{outline:1.5px solid var(--accent)}
+.nowline{position:absolute;left:0;right:0;height:0;border-top:1.5px solid var(--danger);z-index:5;pointer-events:none}
+
+/* today blocks list */
+.tblock{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.tblock:last-child{border-bottom:none}
+.tblock .time{width:96px;flex-shrink:0;font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.tblock .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;align-self:center}
+.tblock.now{color:var(--accent)}
+.tblock.now .time{color:var(--accent);font-weight:600}
+
+/* habits */
+.habit{border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-top:12px}
+.habit.warn2{border-color:var(--warn)}
+.hgrid{display:grid;grid-template-columns:repeat(30,1fr);gap:3px;margin-top:12px}
+@media(max-width:560px){.hgrid{grid-template-columns:repeat(15,1fr);gap:4px}}
+.hcell{aspect-ratio:1;border-radius:3px;background:var(--hover);border:1px solid var(--line);cursor:pointer;transition:background var(--tr);padding:0}
+.hcell.on{background:var(--accent);border-color:var(--accent)}
+.hcell.future{opacity:.35;cursor:default}
+.hcell.today{outline:1.5px solid var(--accent);outline-offset:1px}
+.hstat{display:flex;gap:18px;margin-top:10px;font-size:13px;color:var(--muted)}
+.hstat b{color:var(--text);font-weight:600}
+
+/* kanban */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+@media(max-width:760px){.board{grid-template-columns:1fr}}
+.col{border:1px solid var(--line);border-radius:var(--r);padding:12px;min-height:120px;transition:border-color var(--tr)}
+.col.dragover{border-color:var(--accent)}
+.col h3{color:var(--muted);font-weight:500;font-size:13px;margin-bottom:10px;display:flex;justify-content:space-between}
+.card{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin-bottom:8px;cursor:grab;background:var(--bg);transition:border-color var(--tr)}
+.card:hover{border-color:var(--muted)}
+.card.dragging{opacity:.4}
+.card.touchdrag{position:relative;z-index:50;opacity:.9;border-color:var(--accent);pointer-events:none;transition:none}
+.card .cmeta{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.card .deadline.over{color:var(--danger)}
+
+/* review / stats */
+.qa label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
+.qa textarea{width:100%;min-height:64px;resize:vertical}
+.qa input[type=text]{width:100%}
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:16px}
+.stat{border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.stat .num{font-size:28px;font-weight:600;letter-spacing:-.02em;margin-top:2px}
+.chart{border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-top:14px}
+.chart svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+
+/* modal */
+#modal-root{position:fixed;inset:0;display:none;z-index:100}
+#modal-root.open{display:flex;align-items:flex-end;justify-content:center}
+@media(min-width:520px){#modal-root.open{align-items:center}}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.modal{
+  position:relative;background:var(--bg);border:1px solid var(--line);border-radius:12px 12px 0 0;
+  width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding:22px;
+  animation:up 180ms ease-out;
+}
+@media(min-width:520px){.modal{border-radius:12px}}
+@keyframes up{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+.modal h2{margin-bottom:14px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+.field input:not([type=checkbox]),.field select,.field textarea{width:100%}
+.modal .actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap}
+.daychecks{display:flex;gap:6px;flex-wrap:wrap}
+.daychecks label{display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px;cursor:pointer}
+
+/* toast */
+#toast{
+  position:fixed;bottom:76px;left:50%;transform:translate(-50%,10px);z-index:200;
+  background:var(--text);color:var(--bg);padding:9px 16px;border-radius:var(--r);font-size:13.5px;
+  opacity:0;pointer-events:none;transition:opacity var(--tr),transform var(--tr);max-width:90vw;
+}
+@media(min-width:760px){#toast{bottom:28px}}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* onboarding */
+.ob{max-width:440px;margin:8vh auto 0;padding:0 20px}
+.ob .steps{display:flex;gap:6px;margin:18px 0 26px}
+.ob .steps i{flex:1;height:3px;border-radius:2px;background:var(--line);transition:background var(--tr)}
+.ob .steps i.on{background:var(--accent)}
+.modrow{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.modrow:last-child{border-bottom:none}
+.switch{position:relative;width:36px;height:21px;flex-shrink:0}
+.switch input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;margin:0}
+.switch i{position:absolute;inset:0;background:var(--line);border-radius:99px;transition:background var(--tr);pointer-events:none}
+.switch i::after{content:"";position:absolute;width:15px;height:15px;border-radius:50%;background:var(--bg);top:3px;left:3px;transition:transform var(--tr)}
+.switch input:checked+i{background:var(--accent)}
+.switch input:checked+i::after{transform:translateX(15px)}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{width:34px;height:34px;border-radius:50%;border:2px solid transparent;padding:0;transition:transform var(--tr)}
+.swatch.sel{border-color:var(--text);transform:scale(1.08)}
+
+.loadbar{display:flex;align-items:center;gap:10px;margin-top:10px}
+.loadbar .progressbar{flex:1}
+.loadwarn{color:var(--warn);font-size:13px;margin-top:6px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar"></header>
+  <aside id="sidebar"></aside>
+  <main id="main"></main>
+</div>
+<nav id="bottomnav"></nav>
+<div id="modal-root"></div>
+<div id="toast"></div>
+<script>
+'use strict';
+/* ============ storage ============ */
+const LS_KEY = 'daysystem.v1';
+let memFallback = null;
+let storageOk = true;
+function loadRaw(){
+  try { const s = localStorage.getItem(LS_KEY); return s ? JSON.parse(s) : null; }
+  catch(e){ storageOk = false; return memFallback; }
+}
+function saveRaw(d){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(d)); }
+  catch(e){ storageOk = false; memFallback = d; }
+}
+
+/* ============ state ============ */
+const MODULES = [
+  ['today','Сегодня', true],
+  ['schedule','Неделя', true],
+  ['habits','Привычки', true],
+  ['projects','Проекты', true],
+  ['review','Ревью', true],
+  ['stats','Статистика', true],
+];
+const BLOCK_TYPES = {
+  anchor:  {name:'Якорь',           v:'--c-anchor'},
+  deep:    {name:'Глубокая работа', v:'--c-deep'},
+  routine: {name:'Рутина',          v:'--c-routine'},
+  buffer:  {name:'Буфер',           v:'--c-buffer'},
+  rest:    {name:'Отдых',           v:'--c-rest'},
+};
+const ACCENTS = ['#4f6ef7','#3aa671','#c2653e','#8a5cc9','#c99a2e','#3f8fa8'];
+
+function defaultState(){
+  return {
+    onboarded:false,
+    settings:{
+      name:'', theme:'light', accent:ACCENTS[0],
+      wake:'07:00', sleep:'23:00', meals:['08:00','13:00','19:00'],
+      dayStart:7, dayEnd:23,
+      modules:{today:true,schedule:true,habits:true,projects:true,review:true,stats:true},
+    },
+    days:{},            // 'YYYY-MM-DD' -> {frog, medium[], small[]}
+    blocks:[],          // {id, day 0..6, start, end (мин от полуночи), type, title}
+    template:null,      // сохранённая «типовая неделя»
+    habits:[],          // {id,name,goal,marks:{},created,archived}
+    cards:[],           // {id,title,desc,deadline,col,checklist:[],created}
+    reviews:{},         // weekKey -> {...answers, score, stats}
+  };
+}
+let state = loadRaw() || defaultState();
+// миграция на случай старых данных
+state = Object.assign(defaultState(), state);
+state.settings = Object.assign(defaultState().settings, state.settings || {});
+state.settings.modules = Object.assign(defaultState().settings.modules, state.settings.modules || {});
+
+const ui = { view:'today', obStep:0, obDraft:null, drag:null, cardDrag:null };
+
+function save(){ saveRaw(state); }
+function commit(){ save(); render(); }
+
+/* ============ utils ============ */
+const $ = sel => document.querySelector(sel);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const pad = n => String(n).padStart(2,'0');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function dkey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function fromKey(k){ const [y,m,d] = k.split('-').map(Number); return new Date(y, m-1, d); }
+function addDays(d,n){ const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+function todayD(){ const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+function mondayOf(d){ const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - (x.getDay()+6)%7); return x; }
+function dowIdx(d){ return (d.getDay()+6)%7; } // 0 = Пн
+function minToStr(m){ return pad(Math.floor(m/60)) + ':' + pad(m%60); }
+function strToMin(s){ const [h,m] = String(s||'0:0').split(':').map(Number); return (h||0)*60 + (m||0); }
+function nowMin(){ const n = new Date(); return n.getHours()*60 + n.getMinutes(); }
+const DOW = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const MONTHS_G = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const DOW_FULL = ['понедельник','вторник','среда','четверг','пятница','суббота','воскресенье'];
+function fmtHuman(d){ return DOW_FULL[dowIdx(d)] + ', ' + d.getDate() + ' ' + MONTHS_G[d.getMonth()]; }
+function fmtShort(d){ return d.getDate() + ' ' + MONTHS_G[d.getMonth()]; }
+function plural(n, one, few, many){
+  const a = Math.abs(n)%100, b = a%10;
+  if(a>10 && a<20) return many; if(b>1 && b<5) return few; if(b===1) return one; return many;
+}
+
+function ensureDay(key){
+  if(!state.days[key]) state.days[key] = {frog:null, medium:[], small:[]};
+  const p = state.days[key];
+  if(!Array.isArray(p.medium)) p.medium = [];
+  if(!Array.isArray(p.small)) p.small = [];
+  return p;
+}
+function dayTasks(p){
+  const t = [];
+  if(p.frog) t.push(p.frog);
+  return t.concat(p.medium, p.small);
+}
+// добавить задачу в план дня по приоритету, вернуть куда попала
+function placeTask(key, text){
+  const p = ensureDay(key);
+  const t = {id:uid(), text, done:false};
+  if(!p.frog){ p.frog = t; return 'главная задача'; }
+  if(p.medium.length < 3){ p.medium.push(t); return 'средние'; }
+  if(p.small.length < 5){ p.small.push(t); return 'мелкие'; }
+  state.cards.push({id:uid(), title:text, desc:'', deadline:'', col:'inbox', checklist:[], created:Date.now()});
+  return 'инбокс проектов (план 1–3–5 заполнен)';
+}
+
+/* ============ toast / modal ============ */
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+function openModal(html){
+  const r = $('#modal-root');
+  r.innerHTML = '<div class="overlay"></div><div class="modal">'+html+'</div>';
+  r.classList.add('open');
+  r.querySelector('.overlay').onclick = closeModal;
+}
+function closeModal(){ const r = $('#modal-root'); r.classList.remove('open'); r.innerHTML = ''; }
+
+function confirmModal(title, text, okLabel, onOk, danger){
+  openModal(
+    '<h2>'+esc(title)+'</h2><p class="muted small">'+esc(text)+'</p>'+
+    '<div class="actions"><button class="btn" id="cm-no">Отмена</button>'+
+    '<button class="btn '+(danger?'danger':'primary')+'" id="cm-yes">'+esc(okLabel)+'</button></div>'
+  );
+  $('#cm-no').onclick = closeModal;
+  $('#cm-yes').onclick = () => { closeModal(); onOk(); };
+}
+
+/* ============ icons ============ */
+const IC = {
+  today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  schedule:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>',
+  habits:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l5 5L20 6"/></svg>',
+  projects:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="11" rx="1"/><rect x="17" y="4" width="4" height="7" rx="1"/></svg>',
+  review:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5l4 4L8 20l-5 1 1-5L16.5 3.5z"/></svg>',
+  stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.06-.4.1-.8.1-1.2z"/></svg>',
+};
+
+/* ============ навигация / рендер ============ */
+function applyTheme(theme, accent){
+  theme = theme || state.settings.theme;
+  const a = /^#[0-9a-f]{6}$/i.test(accent || state.settings.accent) ? (accent || state.settings.accent) : ACCENTS[0];
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.setProperty('--accent', a);
+  const tc = document.querySelector('meta[name=theme-color]');
+  if(tc) tc.setAttribute('content', theme==='dark' ? '#121316' : '#ffffff');
+  const rgb = [1,3,5].map(i => parseInt(a.slice(i,i+2),16)).join(',');
+  document.documentElement.style.setProperty('--accent-soft', 'rgba('+rgb+',.12)');
+}
+function navItems(){
+  const items = MODULES.filter(([id]) => state.settings.modules[id]).map(([id,label]) => [id,label]);
+  items.push(['settings','Настройки']);
+  return items;
+}
+function renderNav(){
+  const items = navItems();
+  const mk = (id,label) =>
+    '<button class="navbtn'+(ui.view===id?' active':'')+'" data-nav="'+id+'">'+IC[id]+'<span>'+label+'</span></button>';
+  const light = state.settings.theme==='light';
+  const moon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>';
+  const sun = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  $('#sidebar').innerHTML = '<div class="brand">Система дня</div>' +
+    items.map(i => mk(...i)).join('') + '<div class="spacer"></div>' +
+    '<button class="navbtn" data-theme-toggle>'+(light ? moon+'<span>Тёмная тема</span>' : sun+'<span>Светлая тема</span>')+'</button>';
+  $('#topbar').innerHTML = '<span class="brand">Система дня</span>'+
+    '<button class="iconbtn" data-theme-toggle aria-label="'+(light?'Тёмная тема':'Светлая тема')+'">'+(light?moon:sun)+'</button>';
+  $('#bottomnav').innerHTML = items.map(i => mk(...i)).join('');
+  document.querySelectorAll('[data-nav]').forEach(b => b.onclick = () => { ui.view = b.dataset.nav; render(); });
+  document.querySelectorAll('[data-theme-toggle]').forEach(tt => tt.onclick = () => {
+    state.settings.theme = state.settings.theme==='light'?'dark':'light'; commit();
+  });
+}
+let lastView = null;
+function render(){
+  applyTheme();
+  if(!state.onboarded){
+    $('#sidebar').innerHTML = ''; $('#bottomnav').innerHTML = ''; $('#topbar').innerHTML = '';
+    lastView = null;
+    renderOnboarding(); return;
+  }
+  if(!state.settings.modules[ui.view] && ui.view !== 'settings') ui.view = 'today';
+  renderNav();
+  const views = {today:renderToday, schedule:renderSchedule, habits:renderHabits,
+                 projects:renderProjects, review:renderReview, stats:renderStats, settings:renderSettings};
+  (views[ui.view] || renderToday)();
+  // наверх только при смене экрана, а не при каждой отметке
+  if(lastView !== ui.view){ window.scrollTo(0,0); lastView = ui.view; }
+}
+
+/* ============ онбординг ============ */
+function renderOnboarding(){
+  if(!ui.obDraft) ui.obDraft = JSON.parse(JSON.stringify(defaultState().settings));
+  const d = ui.obDraft, s = ui.obStep;
+  applyTheme(d.theme, d.accent);
+  const steps = '<div class="steps">'+[0,1,2,3].map(i=>'<i class="'+(i<=s?'on':'')+'"></i>').join('')+'</div>';
+  let body = '';
+  if(s===0){
+    body = '<h1>Привет!</h1><p class="muted" style="margin-top:8px">Соберём вашу личную систему дня. Это займёт минуту, всё можно поменять позже в настройках.</p>'+
+      '<div class="field" style="margin-top:24px"><label>Как вас зовут?</label><input id="ob-name" type="text" placeholder="Имя" value="'+esc(d.name)+'" autocomplete="off"></div>';
+  } else if(s===1){
+    body = '<h1>Модули</h1><p class="muted small" style="margin-top:6px">Включите только то, чем реально будете пользоваться. Экран «Сегодня» — основа системы, он включён всегда.</p><div style="margin-top:16px">'+
+      MODULES.map(([id,label]) => {
+        const lock = id==='today';
+        return '<div class="modrow"><span>'+label+'</span><span class="switch"><input type="checkbox" data-mod="'+id+'" '+(d.modules[id]?'checked':'')+(lock?' disabled':'')+'><i></i></span></div>';
+      }).join('')+'</div>';
+  } else if(s===2){
+    body = '<h1>Якоря дня</h1><p class="muted small" style="margin-top:6px">Подъём, отбой и приёмы пищи — опоры, вокруг которых строится расписание. Приёмы пищи появятся в недельной сетке как блоки-якоря.</p>'+
+      '<div class="row" style="margin-top:16px;gap:14px"><div class="field" style="flex:1"><label>Подъём</label><input id="ob-wake" type="time" value="'+d.wake+'"></div>'+
+      '<div class="field" style="flex:1"><label>Отбой</label><input id="ob-sleep" type="time" value="'+d.sleep+'"></div></div>'+
+      '<div class="row" style="gap:14px"><div class="field" style="flex:1"><label>Завтрак</label><input id="ob-m0" type="time" value="'+d.meals[0]+'"></div>'+
+      '<div class="field" style="flex:1"><label>Обед</label><input id="ob-m1" type="time" value="'+d.meals[1]+'"></div>'+
+      '<div class="field" style="flex:1"><label>Ужин</label><input id="ob-m2" type="time" value="'+d.meals[2]+'"></div></div>';
+  } else {
+    body = '<h1>Внешний вид</h1><div class="field" style="margin-top:16px"><label>Акцентный цвет</label><div class="swatches">'+
+      ACCENTS.map(c => '<button class="swatch'+(d.accent===c?' sel':'')+'" data-acc="'+c+'" style="background:'+c+'" aria-label="'+c+'"></button>').join('')+'</div></div>'+
+      '<div class="field"><label>Тема</label><div class="row"><button class="btn'+(d.theme==='light'?' primary':'')+'" data-th="light">Светлая</button>'+
+      '<button class="btn'+(d.theme==='dark'?' primary':'')+'" data-th="dark">Тёмная</button></div></div>';
+  }
+  $('#main').innerHTML = '<div class="ob">'+steps+body+
+    '<div class="row" style="margin-top:28px;justify-content:space-between">'+
+    (s>0?'<button class="btn ghost" id="ob-back">Назад</button>':'<span></span>')+
+    '<button class="btn primary" id="ob-next">'+(s===3?'Начать день':'Дальше')+'</button></div></div>';
+
+  const saveStep = () => {
+    if(s===0){ d.name = ($('#ob-name').value||'').trim(); }
+    if(s===2){
+      d.wake=$('#ob-wake').value||'07:00'; d.sleep=$('#ob-sleep').value||'23:00';
+      d.meals=[$('#ob-m0').value||'08:00', $('#ob-m1').value||'13:00', $('#ob-m2').value||'19:00'];
+    }
+  };
+  document.querySelectorAll('[data-mod]').forEach(ch => ch.onchange = () => d.modules[ch.dataset.mod] = ch.checked);
+  document.querySelectorAll('[data-acc]').forEach(b => b.onclick = () => { d.accent=b.dataset.acc; renderOnboarding(); });
+  document.querySelectorAll('[data-th]').forEach(b => b.onclick = () => { d.theme=b.dataset.th; renderOnboarding(); });
+  if($('#ob-back')) $('#ob-back').onclick = () => { saveStep(); ui.obStep--; renderOnboarding(); };
+  $('#ob-next').onclick = () => {
+    saveStep();
+    if(s<3){ ui.obStep++; renderOnboarding(); return; }
+    finishOnboarding(d);
+  };
+  const nm = $('#ob-name');
+  if(nm){ nm.focus(); nm.onkeydown = e => { if(e.key==='Enter') $('#ob-next').click(); }; }
+}
+function finishOnboarding(d){
+  state.settings = Object.assign(state.settings, d);
+  const wakeH = Math.floor(strToMin(d.wake)/60), sleepM = strToMin(d.sleep);
+  state.settings.dayStart = Math.max(0, Math.min(wakeH, 12));
+  state.settings.dayEnd = Math.min(24, Math.max(Math.ceil(sleepM/60), state.settings.dayStart+8));
+  // блоки-якоря: приёмы пищи на каждый день недели
+  const names = ['Завтрак','Обед','Ужин'];
+  d.meals.forEach((t,i) => {
+    const st = strToMin(t);
+    for(let day=0; day<7; day++)
+      state.blocks.push({id:uid(), day, start:st, end:Math.min(st+30, 1439), type:'anchor', title:names[i]});
+  });
+  state.onboarded = true;
+  ui.view = 'today';
+  applyTheme(); commit();
+  toast('Система готова. Начните с одной главной задачи на сегодня.');
+}
+
+/* ============ Сегодня ============ */
+function greeting(){
+  const h = new Date().getHours();
+  const g = h<5 ? 'Доброй ночи' : h<12 ? 'Доброе утро' : h<18 ? 'Добрый день' : 'Добрый вечер';
+  return g + (state.settings.name ? ', '+esc(state.settings.name) : '');
+}
+function taskRow(t, path, opts){
+  opts = opts||{};
+  return '<div class="task'+(t.done?' done':'')+(opts.frog?' frog':'')+'">'+
+    '<button class="cb" data-toggle="'+path+'" aria-label="Отметить">'+(t.done?'✓':'')+'</button>'+
+    '<div class="txt">'+(opts.frog?'<span class="tiny" style="color:var(--accent);font-weight:600;display:block">ГЛАВНАЯ ЗАДАЧА · ЛЯГУШКА</span>':'')+esc(t.text)+'</div>'+
+    '<button class="iconbtn del" data-deltask="'+path+'" aria-label="Удалить">✕</button></div>';
+}
+function renderToday(){
+  const today = todayD(), key = dkey(today), p = ensureDay(key);
+  const s = state.settings;
+  const wake = strToMin(s.wake), sleep = strToMin(s.sleep), nm = nowMin();
+  const span = sleep>wake ? sleep-wake : 1;
+  const dayPct = Math.max(0, Math.min(100, Math.round((nm-wake)/span*100)));
+  const all = dayTasks(p), doneN = all.filter(t=>t.done).length;
+  const undone = all.length - doneN;
+
+  // тайм-блоки сегодня
+  const di = dowIdx(today);
+  const blocks = state.blocks.filter(b => b.day===di).sort((a,b)=>a.start-b.start);
+  const blocksHtml = blocks.length
+    ? blocks.map(b => {
+        const now = nm>=b.start && nm<b.end;
+        const col = 'var('+BLOCK_TYPES[b.type].v+')';
+        return '<div class="tblock'+(now?' now':'')+'"><span class="time">'+minToStr(b.start)+'–'+minToStr(b.end)+'</span>'+
+          '<span class="dot" style="background:'+col+'"></span><span>'+esc(b.title||BLOCK_TYPES[b.type].name)+
+          (now?' <span class="tiny" style="color:var(--accent)">· сейчас</span>':'')+'</span></div>';
+      }).join('')
+    : '<div class="empty">На сегодня нет тайм-блоков.'+(s.modules.schedule?' Откройте «Неделю» и растяните первый блок мышью по сетке.':'')+'</div>';
+
+  const slotAdders = (list, max, path, label) => {
+    let h = list.map((t,i)=>taskRow(t, path+'.'+i)).join('');
+    if(list.length < max) h += '<button class="slotadd" data-addslot="'+path+'">+ '+label+'</button>';
+    return h;
+  };
+
+  $('#main').innerHTML =
+    '<div class="pagehead between wrap"><div><h1>'+greeting()+'</h1>'+
+    '<div class="muted" style="margin-top:2px">'+fmtHuman(today)+'</div></div>'+
+    '<div style="min-width:160px;text-align:right"><div class="tiny muted">День прошёл на '+dayPct+'%</div>'+
+    '<div class="progressbar" style="margin-top:6px"><i style="width:'+dayPct+'%"></i></div></div></div>'+
+
+    '<div class="section"><div class="between"><h2>План 1–3–5</h2>'+
+    '<div class="row"><span class="pill">'+doneN+' / '+all.length+'</span>'+
+    (undone>0?'<button class="btn sm" id="carry">Невыполненное → завтра</button>':'')+'</div></div>'+
+    '<div style="margin-top:14px">'+
+      (p.frog ? taskRow(p.frog,'frog',{frog:true}) : '<button class="slotadd" data-addslot="frog" style="border:1px dashed var(--accent);border-radius:var(--r);padding:10px 12px;margin-bottom:10px;color:var(--accent)">+ Одна главная задача дня («съешь лягушку» первой)</button>')+
+      '<h3 class="muted" style="margin:14px 0 4px;font-weight:500;font-size:13px">3 средних</h3>'+ slotAdders(p.medium,3,'medium','средняя задача')+
+      '<h3 class="muted" style="margin:16px 0 4px;font-weight:500;font-size:13px">5 мелких</h3>'+ slotAdders(p.small,5,'small','мелкая задача')+
+    '</div></div>'+
+
+    '<div class="section"><h2>Тайм-блоки сегодня</h2><div style="margin-top:8px">'+blocksHtml+'</div></div>'+
+
+    '<div class="section"><h2>Быстро в инбокс</h2>'+
+    '<form id="qa-form" class="row" style="margin-top:10px"><input id="qa-input" type="text" placeholder="Пришла мысль — запишите и вернитесь к делу" style="flex:1">'+
+    '<button class="btn primary" type="submit">Добавить</button></form>'+
+    '<div class="tiny muted" style="margin-top:6px">Задача попадёт в колонку «Инбокс» на доске проектов.</div></div>';
+
+  bindPlanHandlers(key);
+  $('#qa-form').onsubmit = e => {
+    e.preventDefault();
+    const v = $('#qa-input').value.trim();
+    if(!v) return;
+    state.cards.push({id:uid(), title:v, desc:'', deadline:'', col:'inbox', checklist:[], created:Date.now()});
+    save(); $('#qa-input').value=''; toast('Добавлено в инбокс');
+  };
+  const carry = $('#carry');
+  if(carry) carry.onclick = () => {
+    const tomorrow = dkey(addDays(today,1));
+    let moved = 0;
+    const mv = t => { placeTask(tomorrow, t.text); moved++; };
+    if(p.frog && !p.frog.done){ mv(p.frog); p.frog=null; }
+    p.medium = p.medium.filter(t => { if(!t.done){ mv(t); return false; } return true; });
+    p.small  = p.small.filter(t => { if(!t.done){ mv(t); return false; } return true; });
+    commit(); toast('Перенесено на завтра: '+moved+' '+plural(moved,'задача','задачи','задач'));
+  };
+}
+function getByPath(p, path){
+  if(path==='frog') return {get:()=>p.frog, del:()=>p.frog=null};
+  const [arr, i] = path.split('.');
+  return {get:()=>p[arr][+i], del:()=>p[arr].splice(+i,1)};
+}
+function bindPlanHandlers(key){
+  const p = ensureDay(key);
+  document.querySelectorAll('[data-toggle]').forEach(b => b.onclick = () => {
+    const t = getByPath(p, b.dataset.toggle).get(); if(t){ t.done=!t.done; commit(); }
+  });
+  document.querySelectorAll('[data-deltask]').forEach(b => b.onclick = () => {
+    getByPath(p, b.dataset.deltask).del(); commit();
+  });
+  document.querySelectorAll('[data-addslot]').forEach(b => b.onclick = () => {
+    const slot = b.dataset.addslot;
+    const title = slot==='frog' ? 'Главная задача дня' : slot==='medium' ? 'Средняя задача' : 'Мелкая задача';
+    openModal('<h2>'+title+'</h2><div class="field"><input id="nt" type="text" placeholder="Что нужно сделать?"></div>'+
+      '<div class="actions"><button class="btn" id="nt-cancel">Отмена</button><button class="btn primary" id="nt-ok">Добавить</button></div>');
+    const inp = $('#nt'); inp.focus();
+    const add = () => {
+      const v = inp.value.trim(); if(!v) return;
+      const t = {id:uid(), text:v, done:false};
+      if(slot==='frog') p.frog = t;
+      else if(slot==='medium' && p.medium.length<3) p.medium.push(t);
+      else if(slot==='small' && p.small.length<5) p.small.push(t);
+      closeModal(); commit();
+    };
+    inp.onkeydown = e => { if(e.key==='Enter') add(); };
+    $('#nt-ok').onclick = add; $('#nt-cancel').onclick = closeModal;
+  });
+}
+
+/* ============ Недельное расписание ============ */
+const SLOT_H = 26; // px на 30 минут
+function renderSchedule(){
+  const s = state.settings;
+  const startMin = s.dayStart*60, endMin = s.dayEnd*60;
+  const slots = Math.max(1, (endMin-startMin)/30);
+  const monday = mondayOf(todayD());
+  const todayIdx = dowIdx(todayD());
+  const totalMin = 7*(endMin-startMin);
+  const planned = state.blocks.reduce((a,b)=>a + Math.max(0, Math.min(b.end,endMin)-Math.max(b.start,startMin)), 0);
+  const loadPct = totalMin ? Math.round(planned/totalMin*100) : 0;
+
+  const gutter = '<div class="gutter"><div class="ghead"></div>'+
+    Array.from({length:slots},(_,i)=>'<div class="glabel">'+(i%2===0?minToStr(startMin+i*30):'')+'</div>').join('')+'</div>';
+
+  const cols = DOW.map((name,day) => {
+    const date = addDays(monday, day);
+    const cells = Array.from({length:slots},(_,i)=>'<div class="slot" data-day="'+day+'" data-slot="'+i+'"></div>').join('');
+    const blks = state.blocks.filter(b=>b.day===day && b.end>startMin && b.start<endMin).map(b => {
+      const top = (Math.max(b.start,startMin)-startMin)/30*SLOT_H;
+      const h = Math.max(SLOT_H*.8, (Math.min(b.end,endMin)-Math.max(b.start,startMin))/30*SLOT_H - 2);
+      const col = 'var('+BLOCK_TYPES[b.type].v+')';
+      const isNow = day===todayIdx && nowMin()>=b.start && nowMin()<b.end;
+      return '<div class="blk'+(isNow?' now':'')+'" data-blk="'+b.id+'" style="top:'+top+'px;height:'+h+'px;border-left-color:'+col+';background:var(--hover);background:color-mix(in srgb, '+col+' 14%, var(--bg))">'+
+        '<div class="bt">'+esc(b.title||BLOCK_TYPES[b.type].name)+'</div><div class="tiny muted">'+minToStr(b.start)+'–'+minToStr(b.end)+'</div></div>';
+    }).join('');
+    let nowline = '';
+    if(day===todayIdx && nowMin()>=startMin && nowMin()<=endMin)
+      nowline = '<div class="nowline" style="top:'+((nowMin()-startMin)/30*SLOT_H)+'px"></div>';
+    return '<div class="daycol"><div class="dayhead'+(day===todayIdx?' today':'')+'">'+name+' <span class="tiny">'+date.getDate()+'</span></div>'+
+      '<div class="slots" data-daycol="'+day+'">'+cells+blks+nowline+'</div></div>';
+  }).join('');
+
+  const legend = Object.entries(BLOCK_TYPES).map(([k,v]) =>
+    '<span><span class="dot" style="background:var('+v.v+')"></span>'+v.name+'</span>').join('');
+
+  $('#main').innerHTML =
+    '<div class="pagehead between wrap"><div><h1>Неделя</h1><div class="muted small" style="margin-top:2px">'+
+    fmtShort(monday)+' — '+fmtShort(addDays(monday,6))+' · растяните мышью по пустым слотам, чтобы создать блок</div></div>'+
+    '<div class="row wrap"><label class="row tiny muted" style="gap:6px">с <select id="sc-start">'+hourOpts(s.dayStart)+'</select></label>'+
+    '<label class="row tiny muted" style="gap:6px">до <select id="sc-end">'+hourOpts(s.dayEnd)+'</select></label>'+
+    '<button class="btn sm" id="tpl-save">Сохранить как типовую</button>'+
+    '<button class="btn sm" id="tpl-apply" '+(state.template?'':'disabled style="opacity:.4;cursor:default"')+'>Применить типовую</button></div></div>'+
+
+    '<div class="loadbar"><span class="tiny muted" style="width:150px">Загрузка недели: <b style="color:var(--text)">'+loadPct+'%</b></span>'+
+    '<div class="progressbar"><i style="width:'+Math.min(100,loadPct)+'%;'+(loadPct>70?'background:var(--warn)':'')+'"></i></div></div>'+
+    (loadPct>70?'<div class="loadwarn">Запланировано больше 70% времени. Оставьте буфер — план без запаса ломается первым же форс-мажором.</div>':'')+
+
+    '<div class="sched-wrap"><div class="sched" id="sched">'+gutter+cols+'</div></div>'+
+    '<div class="legend">'+legend+'</div>'+
+    (state.blocks.length===0?'<div class="empty">Сетка пуста. Начните с якорей: сон, еда, дорога. Потом добавьте 1–2 блока глубокой работы в часы пиковой энергии.</div>':'');
+
+  $('#sc-start').onchange = e => { s.dayStart = +e.target.value; if(s.dayStart>=s.dayEnd) s.dayEnd = Math.min(24,s.dayStart+1); commit(); };
+  $('#sc-end').onchange = e => { s.dayEnd = +e.target.value; if(s.dayEnd<=s.dayStart) s.dayStart = Math.max(0,s.dayEnd-1); commit(); };
+  $('#tpl-save').onclick = () => confirmModal('Типовая неделя','Сохранить текущую сетку как шаблон? Прежний шаблон будет заменён.','Сохранить',() => {
+    state.template = JSON.parse(JSON.stringify(state.blocks)); commit(); toast('Шаблон сохранён');
+  });
+  if(state.template) $('#tpl-apply').onclick = () => confirmModal('Применить типовую неделю','Текущие блоки будут заменены блоками из шаблона.','Применить',() => {
+    state.blocks = JSON.parse(JSON.stringify(state.template)).map(b=>({...b, id:uid()})); commit(); toast('Шаблон применён');
+  });
+
+  // клики по блокам
+  document.querySelectorAll('[data-blk]').forEach(el => el.onclick = e => { e.stopPropagation(); blockModal(el.dataset.blk); });
+
+  // drag-создание
+  const grid = $('#sched');
+  let drag = null;
+  const cellsOf = day => Array.from(grid.querySelectorAll('.slot[data-day="'+day+'"]'));
+  const mark = () => {
+    grid.querySelectorAll('.slot.dragsel').forEach(c=>c.classList.remove('dragsel'));
+    if(!drag) return;
+    const [a,b] = [Math.min(drag.a,drag.b), Math.max(drag.a,drag.b)];
+    cellsOf(drag.day).forEach((c,i)=>{ if(i>=a && i<=b) c.classList.add('dragsel'); });
+  };
+  grid.addEventListener('pointerdown', e => {
+    const cell = e.target.closest('.slot'); if(!cell) return;
+    e.preventDefault();
+    drag = {day:+cell.dataset.day, a:+cell.dataset.slot, b:+cell.dataset.slot}; mark();
+  });
+  grid.addEventListener('pointermove', e => {
+    if(!drag) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el && el.closest ? el.closest('.slot') : null;
+    if(cell && +cell.dataset.day===drag.day){ drag.b = +cell.dataset.slot; mark(); }
+  });
+  const finish = () => {
+    if(!drag) return;
+    const [a,b] = [Math.min(drag.a,drag.b), Math.max(drag.a,drag.b)];
+    const st = startMin + a*30, en = startMin + (b+1)*30;
+    const day = drag.day; drag = null; mark();
+    blockModal(null, {day, start:st, end:en});
+  };
+  if(window.__schedUp) window.removeEventListener('pointerup', window.__schedUp);
+  window.__schedUp = finish;
+  window.addEventListener('pointerup', finish);
+  grid.addEventListener('pointercancel', () => { drag=null; mark(); });
+}
+function hourOpts(sel){
+  let h=''; for(let i=0;i<=24;i++) h+='<option value="'+i+'"'+(i===sel?' selected':'')+'>'+pad(i)+':00</option>'; return h;
+}
+function timeOpts(sel){
+  // шаг 30 минут по диапазону сетки + текущее значение, если оно вне шага (например, 08:15)
+  const set = new Set();
+  for(let m = state.settings.dayStart*60; m <= state.settings.dayEnd*60; m += 30) set.add(m);
+  if(Number.isFinite(sel)) set.add(sel);
+  return Array.from(set).sort((a,b)=>a-b)
+    .map(m => '<option value="'+m+'"'+(m===sel?' selected':'')+'>'+minToStr(m)+'</option>').join('');
+}
+function blockModal(id, preset){
+  const isNew = !id;
+  const b = isNew
+    ? {id:uid(), day:preset.day, start:preset.start, end:preset.end, type:'deep', title:''}
+    : state.blocks.find(x=>x.id===id);
+  if(!b) return;
+  openModal(
+    '<h2>'+(isNew?'Новый блок':'Блок')+' · '+DOW[b.day]+'</h2>'+
+    '<div class="field"><label>Название</label><input id="bm-title" type="text" value="'+esc(b.title)+'" placeholder="'+esc(BLOCK_TYPES[b.type].name)+'"></div>'+
+    '<div class="field"><label>Тип</label><select id="bm-type">'+
+      Object.entries(BLOCK_TYPES).map(([k,v])=>'<option value="'+k+'"'+(k===b.type?' selected':'')+'>'+v.name+'</option>').join('')+'</select></div>'+
+    '<div class="row"><div class="field" style="flex:1"><label>Начало</label><select id="bm-start">'+timeOpts(b.start)+'</select></div>'+
+    '<div class="field" style="flex:1"><label>Конец</label><select id="bm-end">'+timeOpts(b.end)+'</select></div></div>'+
+    '<div class="field"><label>Скопировать на дни</label><div class="daychecks">'+
+      DOW.map((n,i)=> i===b.day?'':'<label><input type="checkbox" data-cpd="'+i+'"> '+n+'</label>').join('')+'</div></div>'+
+    '<div class="actions">'+(isNew?'':'<button class="btn danger" id="bm-del">Удалить</button>')+
+    '<button class="btn" id="bm-cancel">Отмена</button><button class="btn primary" id="bm-save">Сохранить</button></div>'
+  );
+  $('#bm-cancel').onclick = closeModal;
+  if(!isNew) $('#bm-del').onclick = () => { state.blocks = state.blocks.filter(x=>x.id!==b.id); closeModal(); commit(); };
+  $('#bm-save').onclick = () => {
+    b.title = $('#bm-title').value.trim();
+    b.type = $('#bm-type').value;
+    b.start = +$('#bm-start').value; b.end = +$('#bm-end').value;
+    if(b.end <= b.start) b.end = Math.min(state.settings.dayEnd*60, b.start+30);
+    if(isNew) state.blocks.push(b);
+    document.querySelectorAll('[data-cpd]:checked').forEach(ch => {
+      state.blocks.push({...b, id:uid(), day:+ch.dataset.cpd});
+    });
+    closeModal(); commit();
+  };
+}
+
+/* ============ Привычки ============ */
+function habitStats(h){
+  const t = todayD();
+  let best=0, run=0;
+  for(let i=120;i>=0;i--){
+    if(h.marks[dkey(addDays(t,-i))]){ run++; best=Math.max(best,run); } else run=0;
+  }
+  let cur=0, i = h.marks[dkey(t)] ? 0 : 1;
+  for(;;i++){ if(h.marks[dkey(addDays(t,-i))]) cur++; else break; if(i>365) break; }
+  let done30=0;
+  for(let j=0;j<30;j++) if(h.marks[dkey(addDays(t,-j))]) done30++;
+  const miss2 = !h.marks[dkey(addDays(t,-1))] && !h.marks[dkey(addDays(t,-2))]
+    && (Date.now()-(h.created||0)) > 3*864e5;
+  return {cur, best:Math.max(best,cur), pct:Math.round(done30/30*100), miss2};
+}
+function renderHabits(){
+  const active = state.habits.filter(h=>!h.archived);
+  const archived = state.habits.filter(h=>h.archived);
+  const t = todayD();
+  const html = active.map(h => {
+    const st = habitStats(h);
+    const grid = Array.from({length:30},(_,i)=>{
+      const d = addDays(t, i-29), k = dkey(d);
+      return '<button class="hcell'+(h.marks[k]?' on':'')+(i===29?' today':'')+'" data-hb="'+h.id+'" data-hk="'+k+'" title="'+k+'"></button>';
+    }).join('');
+    return '<div class="habit'+(st.miss2?' warn2':'')+'"><div class="between"><h2>'+esc(h.name)+'</h2>'+
+      '<div class="row"><span class="pill">цель: '+h.goal+' '+plural(h.goal,'день','дня','дней')+'/нед</span>'+
+      '<button class="iconbtn" data-arch="'+h.id+'" title="В архив">▣</button>'+
+      '<button class="iconbtn" data-hdel="'+h.id+'" title="Удалить">✕</button></div></div>'+
+      (st.miss2?'<div class="tiny" style="color:var(--warn);margin-top:6px">Два пропуска подряд. Правило: никогда не пропускай дважды — сегодня сделайте хотя бы минимальную версию.</div>':'')+
+      '<div class="hgrid">'+grid+'</div>'+
+      '<div class="hstat"><span>Серия: <b>'+st.cur+'</b></span><span>Лучшая: <b>'+st.best+'</b></span><span>За 30 дней: <b>'+st.pct+'%</b></span></div></div>';
+  }).join('');
+
+  $('#main').innerHTML =
+    '<div class="pagehead between"><h1>Привычки</h1>'+
+    (active.length<5?'<button class="btn primary" id="hadd">+ Привычка</button>':'<span class="pill">максимум 5 активных</span>')+'</div>'+
+    '<p class="muted small">Клик по клетке — отметка за день. Последняя клетка — сегодня.</p>'+
+    (active.length? html : '<div class="empty">Пока пусто. Начните с одной привычки — маленькой настолько, что её невозможно не сделать (например, «2 минуты растяжки»).</div>')+
+    (archived.length? '<div class="section"><h2 class="muted">Архив</h2>'+archived.map(h=>{
+      const st=habitStats(h);
+      return '<div class="between" style="padding:10px 0;border-bottom:1px solid var(--line)"><span class="muted">'+esc(h.name)+' · лучшая серия '+st.best+'</span>'+
+      '<div class="row"><button class="btn sm" data-unarch="'+h.id+'">Вернуть</button><button class="iconbtn" data-hdel="'+h.id+'">✕</button></div></div>';
+    }).join('')+'</div>':'');
+
+  const hadd = $('#hadd');
+  if(hadd) hadd.onclick = () => {
+    openModal('<h2>Новая привычка</h2>'+
+      '<div class="field"><label>Название</label><input id="hn" type="text" placeholder="Например: читать 10 страниц"></div>'+
+      '<div class="field"><label>Цель, дней в неделю</label><select id="hg">'+[1,2,3,4,5,6,7].map(n=>'<option'+(n===7?' selected':'')+'>'+n+'</option>').join('')+'</select></div>'+
+      '<div class="actions"><button class="btn" id="hc">Отмена</button><button class="btn primary" id="hok">Создать</button></div>');
+    $('#hn').focus(); $('#hc').onclick = closeModal;
+    $('#hok').onclick = () => {
+      const n = $('#hn').value.trim(); if(!n) return;
+      state.habits.push({id:uid(), name:n, goal:+$('#hg').value, marks:{}, created:Date.now(), archived:false});
+      closeModal(); commit();
+    };
+  };
+  document.querySelectorAll('[data-hb]').forEach(c => c.onclick = () => {
+    const h = state.habits.find(x=>x.id===c.dataset.hb); if(!h) return;
+    const k = c.dataset.hk;
+    if(h.marks[k]) delete h.marks[k]; else h.marks[k]=true;
+    commit();
+  });
+  document.querySelectorAll('[data-arch]').forEach(b => b.onclick = () => {
+    const h = state.habits.find(x=>x.id===b.dataset.arch); if(h){ h.archived=true; commit(); }
+  });
+  document.querySelectorAll('[data-unarch]').forEach(b => b.onclick = () => {
+    if(state.habits.filter(x=>!x.archived).length>=5){ toast('Уже 5 активных привычек'); return; }
+    const h = state.habits.find(x=>x.id===b.dataset.unarch); if(h){ h.archived=false; commit(); }
+  });
+  document.querySelectorAll('[data-hdel]').forEach(b => b.onclick = () =>
+    confirmModal('Удалить привычку','Отметки будут удалены безвозвратно.','Удалить',
+      () => { state.habits = state.habits.filter(x=>x.id!==b.dataset.hdel); commit(); }, true));
+}
+
+/* ============ Проекты (канбан) ============ */
+const COLS = [['inbox','Инбокс'],['doing','В работе'],['done','Готово']];
+// мышь — нативный drag-and-drop, палец — долгое нажатие (см. touchmove ниже)
+const CAN_HOVER = !window.matchMedia || window.matchMedia('(hover:hover)').matches;
+function renderProjects(){
+  const cols = COLS.map(([id,name]) => {
+    const cards = state.cards.filter(c=>c.col===id);
+    const inner = cards.map(c => {
+      const total = c.checklist.length, done = c.checklist.filter(x=>x.done).length;
+      const over = c.deadline && fromKey(c.deadline) < todayD() && id!=='done';
+      return '<div class="card"'+(CAN_HOVER?' draggable="true"':'')+' data-card="'+c.id+'"><div>'+esc(c.title)+'</div>'+
+        (total?'<div class="progressbar" style="margin-top:8px"><i style="width:'+Math.round(done/total*100)+'%"></i></div>':'')+
+        '<div class="cmeta tiny muted">'+
+        (c.deadline?'<span class="deadline'+(over?' over':'')+'">до '+fmtShort(fromKey(c.deadline))+'</span>':'')+
+        (total?'<span>'+done+'/'+total+'</span>':'')+
+        (c.desc?'<span>≡</span>':'')+'</div></div>';
+    }).join('');
+    return '<div class="col" data-col="'+id+'"><h3>'+name+'<span>'+cards.length+'</span></h3>'+inner+
+      (id==='inbox'?'<button class="slotadd" data-newcard style="border:none">+ Карточка</button>':'')+
+      (cards.length===0 && id!=='inbox' ? '<div class="tiny muted" style="text-align:center;padding:14px 0">Перетащите карточку сюда</div>':'')+'</div>';
+  }).join('');
+
+  $('#main').innerHTML = '<div class="pagehead between"><h1>Проекты</h1></div>'+
+    '<p class="muted small">Инбокс — всё подряд. В работу берите немногое. «Взять в день» отправляет задачу в план 1–3–5. На телефоне карточку можно перетащить долгим нажатием.</p>'+
+    '<div class="board">'+cols+'</div>'+
+    (state.cards.length===0?'<div class="empty">Доска пуста. Добавьте первую карточку в инбокс — выгрузите голову.</div>':'');
+
+  const nc = document.querySelector('[data-newcard]');
+  if(nc) nc.onclick = () => cardModal(null);
+  document.querySelectorAll('[data-card]').forEach(el => {
+    el.onclick = () => { if(!suppressClick) cardModal(el.dataset.card); };
+    el.addEventListener('dragstart', e => {
+      ui.cardDrag = el.dataset.card; el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      try{ e.dataTransfer.setData('text/plain', el.dataset.card); }catch(_){}
+    });
+    el.addEventListener('dragend', () => { el.classList.remove('dragging'); ui.cardDrag=null; });
+    // тач: долгое нажатие (300 мс) поднимает карточку, дальше тянем пальцем
+    el.addEventListener('touchstart', e => {
+      if(e.touches.length !== 1) return;
+      const t0 = e.touches[0];
+      const td = {el, id:el.dataset.card, x0:t0.clientX, y0:t0.clientY, active:false, col:null};
+      td.timer = setTimeout(() => {
+        td.active = true; el.classList.add('touchdrag');
+        if(navigator.vibrate) try{ navigator.vibrate(10); }catch(_){}
+      }, 300);
+      touchDrag = td;
+    }, {passive:true});
+  });
+  document.querySelectorAll('[data-col]').forEach(col => {
+    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('dragover'); });
+    col.addEventListener('dragleave', () => col.classList.remove('dragover'));
+    col.addEventListener('drop', e => {
+      e.preventDefault(); col.classList.remove('dragover');
+      const id = ui.cardDrag || (e.dataTransfer ? e.dataTransfer.getData('text/plain') : null);
+      const c = state.cards.find(x=>x.id===id);
+      if(c && c.col!==col.dataset.col){ c.col = col.dataset.col; commit(); }
+    });
+  });
+}
+let touchDrag = null, suppressClick = false;
+document.addEventListener('touchmove', e => {
+  const td = touchDrag; if(!td) return;
+  const t = e.touches[0];
+  const dx = t.clientX - td.x0, dy = t.clientY - td.y0;
+  if(!td.active){
+    // палец поехал раньше долгого нажатия — это прокрутка, не перетаскивание
+    if(Math.abs(dx) > 8 || Math.abs(dy) > 8){ clearTimeout(td.timer); touchDrag = null; }
+    return;
+  }
+  e.preventDefault();
+  td.el.style.transform = 'translate('+dx+'px,'+dy+'px)';
+  const under = document.elementFromPoint(t.clientX, t.clientY);
+  const col = under && under.closest ? under.closest('[data-col]') : null;
+  document.querySelectorAll('[data-col].dragover').forEach(c => { if(c!==col) c.classList.remove('dragover'); });
+  if(col) col.classList.add('dragover');
+  td.col = col ? col.dataset.col : null;
+}, {passive:false});
+function endTouchDrag(){
+  const td = touchDrag; if(!td) return;
+  clearTimeout(td.timer); touchDrag = null;
+  if(!td.active) return;
+  suppressClick = true; setTimeout(() => suppressClick = false, 400);
+  td.el.classList.remove('touchdrag'); td.el.style.transform = '';
+  document.querySelectorAll('[data-col].dragover').forEach(c => c.classList.remove('dragover'));
+  const c = state.cards.find(x => x.id === td.id);
+  if(c && td.col && c.col !== td.col){ c.col = td.col; commit(); }
+}
+document.addEventListener('touchend', endTouchDrag);
+document.addEventListener('touchcancel', endTouchDrag);
+document.addEventListener('contextmenu', e => { if(touchDrag && touchDrag.active) e.preventDefault(); });
+
+function cardModal(id){
+  const isNew = !id;
+  const c = isNew ? {id:uid(), title:'', desc:'', deadline:'', col:'inbox', checklist:[], created:Date.now()} : state.cards.find(x=>x.id===id);
+  if(!c) return;
+  const clHtml = () => c.checklist.map((it,i) =>
+    '<div class="task" style="padding:5px 0"><button class="cb" data-cli="'+i+'">'+(it.done?'✓':'')+'</button>'+
+    '<div class="txt'+(it.done?'" style="text-decoration:line-through;color:var(--muted)':'')+'">'+esc(it.text)+'</div>'+
+    '<button class="iconbtn" data-cld="'+i+'">✕</button></div>').join('');
+  openModal(
+    '<h2>'+(isNew?'Новая карточка':'Карточка')+'</h2>'+
+    '<div class="field"><label>Название</label><input id="cm-title" type="text" value="'+esc(c.title)+'"></div>'+
+    '<div class="field"><label>Описание</label><textarea id="cm-desc" rows="2">'+esc(c.desc)+'</textarea></div>'+
+    '<div class="row"><div class="field" style="flex:1"><label>Дедлайн</label><input id="cm-dl" type="date" value="'+esc(c.deadline)+'"></div>'+
+    '<div class="field" style="flex:1"><label>Колонка</label><select id="cm-col">'+COLS.map(([k,n])=>'<option value="'+k+'"'+(k===c.col?' selected':'')+'>'+n+'</option>').join('')+'</select></div></div>'+
+    '<div class="field"><label>Чек-лист</label><div id="cm-cl">'+clHtml()+'</div>'+
+    '<form id="cm-clf" class="row" style="margin-top:6px"><input id="cm-cli" type="text" placeholder="Подзадача" style="flex:1"><button class="btn sm" type="submit">+</button></form></div>'+
+    '<div class="actions">'+
+    (isNew?'':'<button class="btn danger" id="cm-del">Удалить</button><button class="btn" id="cm-day">Взять в день</button>')+
+    '<button class="btn" id="cm-cancel">Отмена</button><button class="btn primary" id="cm-save">Сохранить</button></div>'
+  );
+  const rebindCl = () => {
+    $('#cm-cl').innerHTML = clHtml();
+    document.querySelectorAll('[data-cli]').forEach(b => b.onclick = () => { c.checklist[+b.dataset.cli].done ^= true; rebindCl(); });
+    document.querySelectorAll('[data-cld]').forEach(b => b.onclick = () => { c.checklist.splice(+b.dataset.cld,1); rebindCl(); });
+  };
+  rebindCl();
+  $('#cm-clf').onsubmit = e => {
+    e.preventDefault();
+    const v = $('#cm-cli').value.trim(); if(!v) return;
+    c.checklist.push({id:uid(), text:v, done:false}); $('#cm-cli').value=''; rebindCl();
+  };
+  $('#cm-cancel').onclick = closeModal;
+  $('#cm-save').onclick = () => {
+    const t = $('#cm-title').value.trim(); if(!t){ toast('Введите название'); return; }
+    c.title = t; c.desc = $('#cm-desc').value.trim(); c.deadline = $('#cm-dl').value; c.col = $('#cm-col').value;
+    if(isNew) state.cards.push(c);
+    closeModal(); commit();
+  };
+  if(!isNew){
+    $('#cm-del').onclick = () => confirmModal('Удалить карточку','Действие необратимо.','Удалить',
+      () => { state.cards = state.cards.filter(x=>x.id!==c.id); commit(); }, true);
+    $('#cm-day').onclick = () => {
+      const today = dkey(todayD()), tmr = dkey(addDays(todayD(),1));
+      openModal('<h2>Взять в день</h2><p class="muted small">«'+esc(c.title)+'» попадёт в план 1–3–5 выбранного дня (в первый свободный слот).</p>'+
+        '<div class="field" style="margin-top:12px"><label>Дата</label><input id="td-date" type="date" value="'+today+'" min="'+today+'"></div>'+
+        '<div class="row tiny"><button class="btn sm" id="td-today">Сегодня</button><button class="btn sm" id="td-tmr">Завтра</button></div>'+
+        '<div class="actions"><button class="btn" id="td-cancel">Отмена</button><button class="btn primary" id="td-ok">В план</button></div>');
+      $('#td-today').onclick = () => $('#td-date').value = today;
+      $('#td-tmr').onclick = () => $('#td-date').value = tmr;
+      $('#td-cancel').onclick = closeModal;
+      $('#td-ok').onclick = () => {
+        const dv = $('#td-date').value || today;
+        const where = placeTask(dv, c.title);
+        if(c.col==='inbox') c.col = 'doing';
+        closeModal(); commit();
+        toast('В плане на '+fmtShort(fromKey(dv))+' · слот: '+where);
+      };
+    };
+  }
+  $('#cm-title').focus();
+}
+
+/* ============ статистика недель (общая) ============ */
+function weekStats(monday){
+  let tTotal=0, tDone=0;
+  for(let i=0;i<7;i++){
+    const p = state.days[dkey(addDays(monday,i))];
+    if(!p) continue;
+    const all = dayTasks(p);
+    tTotal += all.length; tDone += all.filter(t=>t.done).length;
+  }
+  const active = state.habits.filter(h=>!h.archived);
+  let hDone=0, hGoal=0;
+  active.forEach(h => {
+    hGoal += Math.min(7, h.goal);
+    for(let i=0;i<7;i++) if(h.marks[dkey(addDays(monday,i))]) hDone++;
+  });
+  const deepMin = state.blocks.filter(b=>b.type==='deep').reduce((a,b)=>a+(b.end-b.start),0);
+  return {
+    taskPct: tTotal? Math.round(tDone/tTotal*100) : null, tTotal, tDone,
+    habitPct: hGoal? Math.min(100, Math.round(hDone/hGoal*100)) : null,
+    deepH: Math.round(deepMin/60*10)/10,
+  };
+}
+
+/* ============ Недельный ревью ============ */
+const REVIEW_Q = [
+  ['done','Что сделал на этой неделе?'],
+  ['notdone','Что не сделал и какая системная причина? (не «ленился», а «не было слота в расписании»)'],
+  ['stole','Что украло время?'],
+  ['worked','Что сработало хорошо?'],
+  ['change','Что меняю на следующей неделе?'],
+];
+function renderReview(){
+  const monday = mondayOf(todayD());
+  const wk = dkey(monday);
+  const r = state.reviews[wk] || {};
+  const st = weekStats(monday);
+  const hist = Object.keys(state.reviews).sort();
+
+  $('#main').innerHTML =
+    '<div class="pagehead"><h1>Недельный ревью</h1><div class="muted small" style="margin-top:2px">Неделя '+fmtShort(monday)+' — '+fmtShort(addDays(monday,6))+'</div></div>'+
+    '<div class="statgrid">'+
+      '<div class="stat"><div class="tiny muted">Задачи выполнены</div><div class="num">'+(st.taskPct===null?'—':st.taskPct+'%')+'</div><div class="tiny muted">'+st.tDone+' из '+st.tTotal+'</div></div>'+
+      '<div class="stat"><div class="tiny muted">Привычки к цели</div><div class="num">'+(st.habitPct===null?'—':st.habitPct+'%')+'</div></div>'+
+      '<div class="stat"><div class="tiny muted">Глубокая работа в плане</div><div class="num">'+st.deepH+' ч</div><div class="tiny muted">по недельному расписанию</div></div>'+
+    '</div>'+
+    '<form id="rv-form" class="qa section" style="margin-top:24px">'+
+    REVIEW_Q.map(([k,q])=>'<label>'+q+'</label><textarea name="'+k+'">'+esc(r[k]||'')+'</textarea>').join('')+
+    '<label>Главная задача следующей недели</label><input type="text" name="main" value="'+esc(r.main||'')+'">'+
+    '<label>Оценка системности недели: <b id="rv-sv">'+(r.score||5)+'</b> / 10</label>'+
+    '<input type="range" name="score" min="1" max="10" value="'+(r.score||5)+'" style="width:100%;padding:0;border:none">'+
+    '<div class="actions" style="justify-content:flex-start"><button class="btn primary" type="submit">'+(state.reviews[wk]?'Обновить ревью':'Сохранить ревью')+'</button></div>'+
+    '</form>'+
+    '<div class="section"><h2>История</h2>'+
+    (hist.length
+      ? '<div class="chart">'+scoreChart(hist)+'</div>'+
+        hist.slice().reverse().map(k => {
+          const rv = state.reviews[k], m = fromKey(k);
+          return '<div style="padding:14px 0;border-bottom:1px solid var(--line)"><div class="between"><b>'+fmtShort(m)+' — '+fmtShort(addDays(m,6))+'</b><span class="pill">'+rv.score+'/10</span></div>'+
+            (rv.main?'<div class="small" style="margin-top:4px">Фокус: '+esc(rv.main)+'</div>':'')+
+            (rv.change?'<div class="small muted" style="margin-top:2px">Меняю: '+esc(rv.change)+'</div>':'')+
+            '<div class="tiny muted" style="margin-top:4px">Задачи '+(rv.stats && rv.stats.taskPct!==null?rv.stats.taskPct+'%':'—')+' · привычки '+(rv.stats && rv.stats.habitPct!==null?rv.stats.habitPct+'%':'—')+'</div></div>';
+        }).join('')
+      : '<div class="empty">Ревью ещё не было. Первое лучше провести в конце недели — 15 минут, честные ответы, без самобичевания.</div>')+
+    '</div>';
+
+  const range = document.querySelector('[name=score]');
+  range.oninput = () => $('#rv-sv').textContent = range.value;
+  $('#rv-form').onsubmit = e => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const obj = {score:+f.get('score'), main:(f.get('main')||'').trim(), stats:st, savedAt:Date.now()};
+    REVIEW_Q.forEach(([k]) => obj[k] = (f.get(k)||'').trim());
+    state.reviews[wk] = obj;
+    commit(); toast('Ревью сохранено');
+  };
+}
+function scoreChart(keys){
+  const W=600, H=140, P=24;
+  const n = keys.length;
+  const x = i => n===1 ? W/2 : P + i*(W-2*P)/(n-1);
+  const y = v => H-P - (v-1)/9*(H-2*P);
+  const pts = keys.map((k,i)=>[x(i), y(state.reviews[k].score)]);
+  const path = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  return '<div class="tiny muted" style="margin-bottom:8px">Оценка системности по неделям</div>'+
+    '<svg viewBox="0 0 '+W+' '+H+'">'+
+    [1,5,10].map(v=>'<line x1="'+P+'" x2="'+(W-P)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)" stroke-width="1"/><text x="6" y="'+(y(v)+4)+'" font-size="10" fill="var(--muted)">'+v+'</text>').join('')+
+    '<path d="'+path+'" fill="none" stroke="var(--accent)" stroke-width="2"/>'+
+    pts.map((p,i)=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3.5" fill="var(--accent)"/><text x="'+p[0]+'" y="'+(H-6)+'" font-size="9" fill="var(--muted)" text-anchor="middle">'+fromKey(keys[i]).getDate()+'.'+pad(fromKey(keys[i]).getMonth()+1)+'</text>').join('')+
+    '</svg>';
+}
+
+/* ============ Статистика ============ */
+function barChart(items, unit){
+  // items: [{label, value, color?}], рисуем простые вертикальные бары
+  const W=600, H=170, P=26;
+  const max = Math.max(1, ...items.map(i=>i.value));
+  const bw = Math.min(46, (W-2*P)/items.length*.62);
+  const step = (W-2*P)/items.length;
+  return '<svg viewBox="0 0 '+W+' '+H+'">'+
+    '<line x1="'+P+'" x2="'+(W-P)+'" y1="'+(H-P)+'" y2="'+(H-P)+'" stroke="var(--line)"/>'+
+    items.map((it,i)=>{
+      const h = Math.round(it.value/max*(H-2*P-14));
+      const x = P + i*step + (step-bw)/2, y = H-P-h;
+      return '<rect x="'+x.toFixed(1)+'" y="'+y+'" width="'+bw.toFixed(1)+'" height="'+h+'" rx="3" fill="'+(it.color||'var(--accent)')+'"/>'+
+        '<text x="'+(x+bw/2)+'" y="'+(y-5)+'" font-size="10" fill="var(--muted)" text-anchor="middle">'+it.value+(unit||'')+'</text>'+
+        '<text x="'+(x+bw/2)+'" y="'+(H-P+13)+'" font-size="10" fill="var(--muted)" text-anchor="middle">'+esc(it.label)+'</text>';
+    }).join('')+'</svg>';
+}
+function periodTaskStats(nDays){
+  let total=0, done=0;
+  const t = todayD();
+  for(let i=0;i<nDays;i++){
+    const p = state.days[dkey(addDays(t,-i))];
+    if(!p) continue;
+    const all = dayTasks(p);
+    total += all.length; done += all.filter(x=>x.done).length;
+  }
+  return {total, done, pct: total?Math.round(done/total*100):null};
+}
+function renderStats(){
+  const t = todayD();
+  const s7 = periodTaskStats(7), s30 = periodTaskStats(30);
+  const days7 = Array.from({length:7},(_,i)=>{
+    const d = addDays(t, i-6), p = state.days[dkey(d)];
+    const done = p ? dayTasks(p).filter(x=>x.done).length : 0;
+    return {label:DOW[dowIdx(d)], value:done};
+  });
+  const active = state.habits.filter(h=>!h.archived);
+  const habitBars = active.map(h=>({label:h.name.length>9?h.name.slice(0,8)+'…':h.name, value:habitStats(h).pct}));
+  const typeBars = Object.entries(BLOCK_TYPES).map(([k,v])=>{
+    const min = state.blocks.filter(b=>b.type===k).reduce((a,b)=>a+(b.end-b.start),0);
+    return {label:v.name.split(' ')[0], value:Math.round(min/60*10)/10, color:'var('+v.v+')'};
+  });
+  const hasBlocks = state.blocks.length>0;
+  const noData = s30.total===0 && active.length===0 && !hasBlocks;
+
+  $('#main').innerHTML =
+    '<div class="pagehead"><h1>Статистика</h1></div>'+
+    (noData ? '<div class="empty">Данных пока нет. Пара дней с планом 1–3–5 — и здесь появятся первые графики.</div>' :
+    '<div class="statgrid">'+
+      '<div class="stat"><div class="tiny muted">Задачи · 7 дней</div><div class="num">'+(s7.pct===null?'—':s7.pct+'%')+'</div><div class="tiny muted">'+s7.done+' из '+s7.total+'</div></div>'+
+      '<div class="stat"><div class="tiny muted">Задачи · 30 дней</div><div class="num">'+(s30.pct===null?'—':s30.pct+'%')+'</div><div class="tiny muted">'+s30.done+' из '+s30.total+'</div></div>'+
+      '<div class="stat"><div class="tiny muted">Глубокая работа / нед</div><div class="num">'+(Math.round(state.blocks.filter(b=>b.type==='deep').reduce((a,b)=>a+(b.end-b.start),0)/6)/10)+' ч</div></div>'+
+    '</div>'+
+    '<div class="chart"><div class="tiny muted" style="margin-bottom:8px">Выполнено задач по дням, последние 7 дней</div>'+barChart(days7)+'</div>'+
+    (active.length?'<div class="chart"><div class="tiny muted" style="margin-bottom:8px">Привычки, % за 30 дней</div>'+barChart(habitBars,'%')+'</div>':'')+
+    (hasBlocks?'<div class="chart"><div class="tiny muted" style="margin-bottom:8px">Часов в неделю по типам блоков</div>'+barChart(typeBars,'ч')+'</div>':''));
+}
+
+/* ============ Настройки ============ */
+function renderSettings(){
+  const s = state.settings;
+  $('#main').innerHTML =
+    '<div class="pagehead"><h1>Настройки</h1></div>'+
+    '<div class="section" style="max-width:520px">'+
+      '<div class="field"><label>Имя</label><input id="st-name" type="text" value="'+esc(s.name)+'"></div>'+
+      '<div class="field"><label>Акцентный цвет</label><div class="swatches">'+
+        ACCENTS.map(c=>'<button class="swatch'+(s.accent===c?' sel':'')+'" data-acc="'+c+'" style="background:'+c+'"></button>').join('')+
+        '<input type="color" id="st-cc" value="'+esc(s.accent)+'" title="Свой цвет"></div></div>'+
+      '<div class="field"><label>Тема</label><div class="row">'+
+        '<button class="btn'+(s.theme==='light'?' primary':'')+'" data-th="light">Светлая</button>'+
+        '<button class="btn'+(s.theme==='dark'?' primary':'')+'" data-th="dark">Тёмная</button></div></div>'+
+      '<hr><h2>Модули</h2><div style="margin-top:6px">'+
+        MODULES.map(([id,label])=>'<div class="modrow"><span>'+label+'</span><span class="switch"><input type="checkbox" data-mod="'+id+'" '+(s.modules[id]?'checked':'')+(id==='today'?' disabled':'')+'><i></i></span></div>').join('')+'</div>'+
+      '<hr><h2>Якоря дня</h2>'+
+      '<div class="row" style="margin-top:12px;gap:14px"><div class="field" style="flex:1"><label>Подъём</label><input id="st-wake" type="time" value="'+s.wake+'"></div>'+
+      '<div class="field" style="flex:1"><label>Отбой</label><input id="st-sleep" type="time" value="'+s.sleep+'"></div></div>'+
+      '<div class="tiny muted">Используются для прогресса дня на экране «Сегодня». Диапазон сетки недели меняется на самом экране «Неделя».</div>'+
+      '<hr><h2>Данные</h2>'+
+      (storageOk?'':'<div class="tiny" style="color:var(--warn);margin-top:8px">Внимание: локальное хранилище недоступно в этом окружении (например, во встроенном предпросмотре). Данные живут до перезагрузки страницы — скачайте файл и откройте его в браузере, либо пользуйтесь экспортом.</div>')+
+      '<div class="row wrap" style="margin-top:12px">'+
+        '<button class="btn" id="st-export">Экспорт в JSON</button>'+
+        '<button class="btn" id="st-import">Импорт из JSON</button>'+
+        '<input id="st-file" type="file" accept=".json,application/json" style="display:none">'+
+        '<button class="btn danger" id="st-reset">Полный сброс</button></div>'+
+      '<div class="tiny muted" style="margin-top:8px">Экспорт — это резервная копия и способ перенести систему на другое устройство.</div>'+
+    '</div>';
+
+  $('#st-name').onchange = e => { s.name = e.target.value.trim(); commit(); };
+  document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{ s.accent=b.dataset.acc; commit(); });
+  $('#st-cc').onchange = e => { s.accent = e.target.value; commit(); };
+  document.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{ s.theme=b.dataset.th; commit(); });
+  document.querySelectorAll('[data-mod]').forEach(ch=>ch.onchange=()=>{ s.modules[ch.dataset.mod]=ch.checked; commit(); });
+  $('#st-wake').onchange = e => { s.wake=e.target.value||'07:00'; commit(); };
+  $('#st-sleep').onchange = e => { s.sleep=e.target.value||'23:00'; commit(); };
+
+  $('#st-export').onclick = () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'day-system-backup-'+dkey(todayD())+'.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+    toast('Файл резервной копии скачан');
+  };
+  $('#st-import').onclick = () => $('#st-file').click();
+  $('#st-file').onchange = e => {
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const data = JSON.parse(rd.result);
+        if(!data || typeof data!=='object' || !data.settings) throw new Error('bad');
+        confirmModal('Импорт данных','Текущие данные будут заменены данными из файла.','Импортировать',() => {
+          state = Object.assign(defaultState(), data);
+          state.settings = Object.assign(defaultState().settings, data.settings||{});
+          state.settings.modules = Object.assign(defaultState().settings.modules, (data.settings||{}).modules||{});
+          ui.view='today'; applyTheme(); commit(); toast('Данные импортированы');
+        });
+      } catch(_) { toast('Не удалось прочитать файл: это не резервная копия системы'); }
+    };
+    rd.readAsText(f);
+    e.target.value = '';
+  };
+  $('#st-reset').onclick = () => confirmModal('Полный сброс','Все задачи, блоки, привычки, проекты и ревью будут удалены. Действие необратимо. Сначала сделайте экспорт, если данные ещё нужны.','Стереть всё',() => {
+    state = defaultState(); ui.view='today'; ui.obStep=0; ui.obDraft=null;
+    try{ localStorage.removeItem(LS_KEY); }catch(_){}
+    save(); applyTheme(); render();
+  }, true);
+}
+
+/* ============ запуск ============ */
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+// обновление «сейчас» раз в минуту (подсветка блока, прогресс дня)
+setInterval(() => {
+  if(!state.onboarded) return;
+  if((ui.view==='today' || ui.view==='schedule') && !$('#modal-root').classList.contains('open')){
+    const ae = document.activeElement;
+    if(!ae || !/INPUT|TEXTAREA|SELECT/.test(ae.tagName)) render();
+  }
+}, 60000);
+render();
+</script>
+</body>
+</html>
